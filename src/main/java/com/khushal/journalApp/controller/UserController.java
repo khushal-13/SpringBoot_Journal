@@ -30,29 +30,21 @@ public class UserController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody User user) {
-        try{
-            return new ResponseEntity<>(userService.saveUser(user), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
 
-    @PutMapping("/{username}")
-    public ResponseEntity<User> updateUser(@PathVariable String username, @RequestBody User user) {
+    @PutMapping("/update")
+    public ResponseEntity<User> updateUser(@RequestBody User user) {
 
         try {
-            User updatedUser = userService.updateUser(username, user);
+            User updatedUser = userService.updateUser(user);
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    @DeleteMapping("/{username}")
-    public ResponseEntity<?> deleteUser(@PathVariable String username) {
-        if(userService.deleteUser(username)) {
+    @DeleteMapping()
+    public ResponseEntity<?> deleteUser() {
+        if(userService.deleteUser()) {
             return new ResponseEntity<>(HttpStatus.OK);
         }
 

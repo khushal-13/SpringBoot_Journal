@@ -1,17 +1,17 @@
 package com.khushal.journalApp.service;
 
 
-import com.khushal.journalApp.entity.JournalEntry;
 import com.khushal.journalApp.entity.User;
 import com.khushal.journalApp.repository.UserRepository;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.security.Security;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -19,11 +19,19 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
+    private static final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     public List<User> getAll() {
         return userRepository.findAll();
     }
 
-    public User saveUser(User user) {
+    public void saveUser(User user) {
+        userRepository.save(user);
+    }
+
+    public User saveNewUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRoles(List.of("USER"));
         return userRepository.save(user);
     }
 
@@ -31,22 +39,28 @@ public class UserService {
         return userRepository.findByUserName(username);
     }
 
-    public boolean deleteUser(String username) {
-        if(userRepository.findByUserName(username)!=null) {
-            userRepository.deleteByUserName(username);
+    public boolean deleteUser() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if(authentication.getName() != null) {
+            userRepository.deleteByUserName(authentication.getName());
             return true;
         }
         return false;
     }
 
-    public User updateUser(String username, User user) {
+    public User updateUser(User user) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
 
         User oldUser = userRepository.findByUserName(username);
 
         oldUser.setUserName(user.getUserName());
         oldUser.setPassword(user.getPassword());
 
-        userRepository.save(oldUser);
+        saveNewUser(oldUser);
 
         return oldUser;
     }
