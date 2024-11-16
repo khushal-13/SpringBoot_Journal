@@ -3,6 +3,8 @@ package com.khushal.journalApp.service;
 
 import com.khushal.journalApp.entity.User;
 import com.khushal.journalApp.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,11 +12,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.security.Security;
 import java.util.List;
 
 @Service
 public class UserService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     UserRepository userRepository;
@@ -36,6 +39,13 @@ public class UserService {
     }
 
     public User findByUserName(String username) {
+
+//        logger.trace("Trace"); // Special condition      lowest priority 1
+//        logger.debug("Debug"); // Special condition                      2
+//        logger.info("Info");   //                                        3
+//        logger.warn("Warn");   //                                        4
+//        logger.error("Error"); //                     highest priority   5
+
         return userRepository.findByUserName(username);
     }
 
@@ -65,4 +75,9 @@ public class UserService {
         return oldUser;
     }
 
+    public User saveNewAdmin(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRoles(List.of("USER", "ADMIN"));
+        return userRepository.save(user);
+    }
 }

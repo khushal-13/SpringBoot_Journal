@@ -19,13 +19,17 @@ import java.util.List;
 public class User {
 
     @Id
-
     private ObjectId id;
 
     // Indexing will not create automatically unless we mention it in .properties file
     @Indexed(unique = true)
     @NonNull
     private String userName;
+
+    private String email;
+
+    private boolean sentimentAnalysis;
+
     @NonNull
     private String password;
 

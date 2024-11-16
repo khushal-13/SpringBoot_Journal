@@ -7,7 +7,6 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -47,26 +46,32 @@ public class JournalService {
         return journalRepository.findById(id);
     }
 
+    @Transactional
     public void deleteEntry(ObjectId id, String username) {
-        User user = userService.findByUserName(username);
-        user.getEntries().removeIf(x -> x.getId().equals(id));
-        userService.saveUser(user);
-        journalRepository.deleteById(id);
+        try {
+            User user = userService.findByUserName(username);
+            boolean removed = user.getEntries().removeIf(x -> x.getId().equals(id));
+
+            if(removed) {
+                userService.saveUser(user);
+                journalRepository.deleteById(id);
+            }
+        } catch (Exception e) {
+            System.out.println(e.toString());
+            throw new RuntimeException("An error occurred while deleting journalEntry", e);
+        }
     }
 
-    public boolean updateEntry(ObjectId id, JournalEntry myEntry) {
-
+    public JournalEntry updateEntry(ObjectId id, JournalEntry myEntry) {
 
         JournalEntry old = journalRepository.findById(id).orElse(null);
 
         if(old!=null) {
-
             old.setTitle(myEntry.getTitle() != null && !myEntry.getTitle().isEmpty() ? myEntry.getTitle() : old.getTitle());
             old.setContent(myEntry.getContent() != null && !myEntry.getContent().isEmpty() ? myEntry.getContent() : old.getContent());
+            old.setDate(LocalDateTime.now());
             journalRepository.save(old);
-            return true;  // Updated
         }
-
-        return false;     // Not Updated
+        return old;
     }
 }
